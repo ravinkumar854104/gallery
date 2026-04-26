@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Personal Gallery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .image-card:hover .remove-btn {
+            opacity: 1;
+        }
+
+        .custom-loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 glass-morphism py-4 px-6 mb-8">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold tracking-tight text-indigo-600">MY SPACE</h1>
+            <div class="space-x-6 text-sm font-medium">
+                <a href="#about" class="hover:text-indigo-600 transition-colors">About</a>
+                <a href="#gallery" class="hover:text-indigo-600 transition-colors">Gallery</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-6 pb-24">
+        
+        <!-- About Section -->
+        <section id="about" class="mb-20">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6">
+                    <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight">
+                        Hi there, <br><span class="text-indigo-600">I'm Creative & Passionate.</span>
+                    </h2>
+                    <p class="text-lg text-slate-600 leading-relaxed">
+                        Welcome to my personal corner of the web. I'm a lifelong learner with a passion for capturing moments and sharing stories. Whether it's through code, photography, or simple daily observations, I love building things that inspire others. 
+                    </p>
+                    <div class="flex space-x-4">
+                        <span class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-full text-sm font-semibold">Photographer</span>
+                        <span class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-sm font-semibold">Dreamer</span>
+                        <span class="bg-amber-100 text-amber-700 px-4 py-2 rounded-full text-sm font-semibold">Explorer</span>
+                    </div>
+                </div>
+                <div class="relative">
+                    <div class="w-full h-80 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-2xl overflow-hidden flex items-center justify-center">
+                         <i class="fas fa-user-circle text-white text-9xl opacity-20"></i>
+                         <!-- Fallback Image -->
+                         <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=800" 
+                              alt="Profile" 
+                              class="absolute inset-0 w-full h-full object-cover mix-blend-overlay"
+                              onerror="this.style.display='none'">
+                    </div>
+                    <div class="absolute -bottom-6 -right-6 bg-white p-6 rounded-xl shadow-xl hidden md:block">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Location</p>
+                        <p class="font-semibold text-slate-800">Based in Earth 🌍</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-slate-200 mb-20">
+
+        <!-- Gallery Section -->
+        <section id="gallery">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+                <div>
+                    <h3 class="text-3xl font-bold text-slate-900 mb-2">Photo Collection</h3>
+                    <p class="text-slate-500">Upload and showcase your favorite memories here.</p>
+                </div>
+                
+                <div class="flex gap-3">
+                    <!-- Custom Styled File Input -->
+                    <label for="photo-upload" class="cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-lg flex items-center gap-2 active:scale-95">
+                        <i class="fas fa-plus"></i>
+                        Browse Photos
+                        <input type="file" id="photo-upload" class="hidden" accept="image/*" multiple>
+                    </label>
+                    <button id="clear-btn" class="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 px-6 py-3 rounded-lg font-semibold transition-all flex items-center gap-2">
+                        <i class="fas fa-trash-can"></i>
+                        Clear All
+                    </button>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="py-20 border-2 border-dashed border-slate-200 rounded-3xl flex flex-col items-center justify-center text-slate-400">
+                <i class="fas fa-images text-6xl mb-4 opacity-20"></i>
+                <p class="text-lg">No photos uploaded yet. Start by browsing your files!</p>
+            </div>
+
+            <!-- Photos Grid -->
+            <div id="gallery-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Images will be injected here -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Custom Modal/Notification Toast -->
+    <div id="notification" class="fixed bottom-8 right-8 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3">
+            <i class="fas fa-check-circle text-emerald-400"></i>
+            <span id="notification-text">Action successful!</span>
+        </div>
+    </div>
+
+    <script>
+        const photoUpload = document.getElementById('photo-upload');
+        const galleryGrid = document.getElementById('gallery-grid');
+        const emptyState = document.getElementById('empty-state');
+        const clearBtn = document.getElementById('clear-btn');
+        const notification = document.getElementById('notification');
+        const notificationText = document.getElementById('notification-text');
+
+        let photos = [];
+
+        function showNotification(message) {
+            notificationText.innerText = message;
+            notification.classList.remove('translate-y-20', 'opacity-0');
+            notification.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                notification.classList.remove('translate-y-0', 'opacity-100');
+                notification.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function updateUI() {
+            if (photos.length === 0) {
+                emptyState.style.display = 'flex';
+                galleryGrid.innerHTML = '';
+            } else {
+                emptyState.style.display = 'none';
+                renderGallery();
+            }
+        }
+
+        function renderGallery() {
+            galleryGrid.innerHTML = '';
+            photos.forEach((photo, index) => {
+                const card = document.createElement('div');
+                card.className = 'image-card relative group bg-white p-2 rounded-2xl shadow-md transition-all hover:shadow-xl hover:-translate-y-1 animate-in fade-in zoom-in duration-300';
+                
+                card.innerHTML = `
+                    <div class="aspect-square rounded-xl overflow-hidden bg-slate-100 relative">
+                        <img src="${photo}" class="w-full h-full object-cover" alt="Uploaded photo">
+                        <button onclick="removePhoto(${index})" class="remove-btn opacity-0 absolute top-2 right-2 bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center transition-opacity hover:bg-red-600 shadow-lg">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                galleryGrid.appendChild(card);
+            });
+        }
+
+        function removePhoto(index) {
+            photos.splice(index, 1);
+            updateUI();
+            showNotification('Photo removed');
+        }
+
+        photoUpload.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            let loadedCount = 0;
+            
+            files.forEach(file => {
+                if (!file.type.startsWith('image/')) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    photos.push(event.target.result);
+                    loadedCount++;
+                    
+                    if (loadedCount === files.length) {
+                        updateUI();
+                        showNotification(`Added ${loadedCount} photo(s)`);
+                        photoUpload.value = ''; // Reset input
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        clearBtn.addEventListener('click', () => {
+            if (photos.length === 0) return;
+            if (confirm('Are you sure you want to clear all photos?')) {
+                photos = [];
+                updateUI();
+                showNotification('Gallery cleared');
+            }
+        });
+
+        // Initialize UI
+        updateUI();
+    </script>
+</body>
+</html>
