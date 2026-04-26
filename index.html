@@ -3,17 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart AI Photo Gallery</title>
+    <title>AI Smart Face Gallery - Duplicate Fix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- AI Face Recognition Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
-        body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; }
+        body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; scroll-behavior: smooth; }
         .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.2); }
         .photo-card:hover .actions { opacity: 1; transform: translateY(0); }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .face-blob { transition: all 0.3s ease; }
-        .face-blob:hover { transform: scale(1.1); z-index: 10; }
+        .face-blob { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+        .face-blob:hover { transform: scale(1.08); }
+        .face-active { border: 4px solid #4f46e5 !important; transform: scale(1.05); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fadeIn 0.5s ease-out forwards; }
+        
+        .shimmer {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     </style>
 </head>
 <body class="min-h-screen text-slate-800">
@@ -22,80 +36,87 @@
     <nav class="sticky top-0 z-50 glass px-6 py-4 mb-6 shadow-sm">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-2">
-                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white">
-                    <i class="fas fa-bolt"></i>
+                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-200 text-xl">
+                    <i class="fas fa-id-badge"></i>
                 </div>
-                <h1 class="text-xl font-bold tracking-tight text-slate-900">SMART GALLERY</h1>
+                <h1 class="text-xl font-bold tracking-tight text-slate-900">FACE SYNC AI</h1>
             </div>
-            <div id="status" class="text-[10px] font-bold px-3 py-1 bg-slate-100 rounded-full text-slate-500 uppercase tracking-widest">
-                Connecting...
+            <div id="ai-status" class="text-[10px] font-bold px-3 py-1 bg-amber-100 rounded-full text-amber-600 uppercase tracking-widest animate-pulse">
+                AI Brain Loading...
             </div>
         </div>
     </nav>
 
     <main class="max-w-7xl mx-auto px-6 pb-20">
         
-        <!-- Smart Section: Face Albums (Google Photos Style) -->
-        <section class="mb-12">
-            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Log aur Albums</h3>
-            <div id="people-scroller" class="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
-                <div class="flex-shrink-0 flex flex-col items-center gap-2 opacity-30">
-                    <div class="w-20 h-20 rounded-full bg-slate-200 border-4 border-white shadow-md flex items-center justify-center">
-                        <i class="fas fa-user-plus text-2xl"></i>
-                    </div>
-                    <span class="text-xs font-semibold">Tag Karein</span>
+        <!-- Smart People Section -->
+        <section class="mb-12 animate-in">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <i class="fas fa-users-viewfinder text-indigo-500"></i> People in your Photos
+                </h3>
+                <button id="clear-filter" class="hidden text-xs font-bold text-indigo-600 hover:underline">Show All Photos</button>
+            </div>
+            <div id="people-scroller" class="flex gap-6 overflow-x-auto pb-4 scrollbar-hide min-h-[140px]">
+                <div class="flex-shrink-0 flex flex-col items-center gap-2 opacity-20">
+                    <div class="w-20 h-20 rounded-full bg-slate-200 border-4 border-white shadow-md shimmer"></div>
+                    <span class="text-[10px] font-bold">Scanning...</span>
                 </div>
             </div>
         </section>
 
-        <!-- Main Controls -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 animate-in" style="animation-delay: 0.1s;">
             <div>
-                <h2 class="text-4xl font-extrabold text-slate-900 tracking-tight">Meri DSLR Gallery</h2>
-                <p class="text-slate-500 mt-1">Automatic sync GitHub aur Vercel ke sath.</p>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">AI Gallery</h2>
+                <p class="text-slate-500 mt-1">Duplicate face issue fixed. Ab sync aur behtar kaam karega.</p>
             </div>
-            <div class="flex gap-3">
-                <label for="upload" class="cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-2xl font-bold shadow-xl shadow-indigo-200 transition-all flex items-center gap-3 active:scale-95">
-                    <i class="fas fa-plus-circle text-lg"></i>
-                    Upload New
-                    <input type="file" id="upload" class="hidden" accept="image/*" multiple disabled>
+            <div class="flex gap-3 w-full md:w-auto">
+                <label for="upload" id="upload-label" class="pointer-events-none opacity-50 flex-1 md:flex-none cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-indigo-100 transition-all flex items-center justify-center gap-3 active:scale-95 text-sm">
+                    <i class="fas fa-plus"></i>
+                    Upload New Photos
+                    <input type="file" id="upload" class="hidden" accept="image/*" multiple>
                 </label>
             </div>
         </div>
 
-        <!-- Progress Loader -->
-        <div id="loader" class="py-20 flex flex-col items-center justify-center gap-4">
+        <div id="loader" class="py-24 flex flex-col items-center justify-center gap-4 text-center">
             <div class="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
-            <p class="text-slate-400 font-medium italic">Photos sync ho rahi hain...</p>
+            <p id="loader-text" class="text-slate-400 font-medium italic mt-2">Checking Cloud Database...</p>
         </div>
 
-        <!-- Gallery Grid -->
-        <div id="gallery-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
+        <div id="gallery-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6"></div>
 
     </main>
 
-    <!-- Tag Modal -->
+    <!-- Tag/Name Edit Modal -->
     <div id="tag-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl">
-            <h4 class="text-2xl font-bold text-slate-900 mb-4">Kise Tag Karein?</h4>
-            <input type="text" id="tag-name" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 mb-6 outline-none font-semibold" placeholder="Naam likhein">
-            <button id="save-tag" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-lg">Save Album</button>
-            <button id="close-modal" class="w-full mt-2 text-slate-400 font-bold py-2">Cancel</button>
+        <div class="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl">
+            <h4 class="text-2xl font-bold text-slate-900 mb-2">Inka naam kya hai?</h4>
+            <div id="face-preview" class="w-24 h-24 rounded-full mx-auto mb-6 border-4 border-indigo-100 overflow-hidden">
+                <img id="modal-face-img" src="" class="w-full h-full object-cover">
+            </div>
+            <input type="text" id="person-name-input" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 mb-6 outline-none font-bold text-slate-800 focus:border-indigo-600" placeholder="e.g. Papa, Me, Rahul">
+            <div class="flex gap-3">
+                <button id="save-person-btn" class="flex-1 bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-lg">Save Name</button>
+                <button id="close-modal-btn" class="flex-1 bg-slate-100 text-slate-600 font-bold py-4 rounded-2xl">Cancel</button>
+            </div>
         </div>
     </div>
 
-    <!-- Notification Notification -->
-    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 glass px-8 py-4 rounded-3xl shadow-2xl z-[110] opacity-0 translate-y-10 transition-all duration-500 pointer-events-none">
-        <span id="toast-text" class="font-bold text-slate-800">Done!</span>
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 glass px-8 py-4 rounded-full shadow-2xl z-[110] opacity-0 translate-y-10 transition-all duration-500 pointer-events-none">
+        <span id="toast-text" class="font-bold text-slate-800 text-sm">Task Complete!</span>
     </div>
 
-    <!-- Firebase SDKs -->
+    <!-- Processing Canvas (Hidden) -->
+    <canvas id="crop-canvas" class="hidden"></canvas>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, deleteDoc, updateDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, deleteDoc, updateDoc, doc, setDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Config (User's Credentials)
         const firebaseConfig = {
             apiKey: "AIzaSyBSmODqmS70zYYp6teqgaORzH8QAnhRS-k",
             authDomain: "mygallery-dbfc5.firebaseapp.com",
@@ -109,41 +130,126 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = 'smart-gallery-prod';
+        const appId = 'face-sync-gallery-v5'; 
 
-        const galleryGrid = document.getElementById('gallery-grid');
+        const aiStatus = document.getElementById('ai-status');
         const uploadInput = document.getElementById('upload');
+        const uploadLabel = document.getElementById('upload-label');
+        const galleryGrid = document.getElementById('gallery-grid');
         const loader = document.getElementById('loader');
-        const status = document.getElementById('status');
         const peopleScroller = document.getElementById('people-scroller');
         const tagModal = document.getElementById('tag-modal');
-        const tagNameInput = document.getElementById('tag-name');
-        
+        const personNameInput = document.getElementById('person-name-input');
+        const clearFilterBtn = document.getElementById('clear-filter');
+
         let user = null;
         let photos = [];
-        let selectedId = null;
-        let filterTag = null;
+        let knownPeople = []; 
+        let currentFilterPersonId = null;
+        let activeFaceToNameId = null;
 
-        // Start Auth
-        const init = async () => {
+        const loadModels = async () => {
             try {
-                await signInAnonymously(auth);
+                const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights';
+                await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+                await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+                
+                aiStatus.innerText = "AI Brain Ready 🤖";
+                aiStatus.classList.remove('animate-pulse', 'bg-amber-100', 'text-amber-600');
+                aiStatus.classList.add('bg-emerald-100', 'text-emerald-600');
+                uploadLabel.classList.remove('pointer-events-none', 'opacity-50');
             } catch (err) {
-                console.error("Auth error:", err);
+                aiStatus.innerText = "AI Loading Error ❌";
+                console.error(err);
             }
+        };
+
+        const init = async () => {
+            await signInAnonymously(auth);
+            loadModels();
         };
         init();
 
         onAuthStateChanged(auth, (u) => {
-            if (u) {
-                user = u;
-                status.innerText = "CLOUD SYNC: ACTIVE ✅";
-                uploadInput.disabled = false;
-                syncGallery();
-            }
+            if (u) { user = u; syncData(); }
         });
 
-        // Compression for DSLR Photos (Auto-Resize to fit Firestore 1MB limit)
+        function syncData() {
+            const peopleRef = collection(db, 'artifacts', appId, 'users', user.uid, 'known_people');
+            onSnapshot(peopleRef, (snap) => {
+                knownPeople = [];
+                snap.forEach(d => knownPeople.push({ id: d.id, ...d.data() }));
+                renderPeople();
+            });
+
+            const photosRef = collection(db, 'artifacts', appId, 'users', user.uid, 'photos');
+            onSnapshot(photosRef, (snap) => {
+                loader.style.display = 'none';
+                photos = [];
+                snap.forEach(d => photos.push({ id: d.id, ...d.data() }));
+                photos.sort((a, b) => b.time - a.time);
+                renderGallery();
+            });
+        }
+
+        async function processPhoto(file) {
+            const img = await faceapi.bufferToImage(file);
+            const detections = await faceapi.detectAllFaces(img)
+                .withFaceLandmarks()
+                .withFaceDescriptors();
+
+            const detectedPeopleIds = [];
+
+            for (const det of detections) {
+                const descriptor = Array.from(det.descriptor);
+                let matchedPerson = null;
+
+                // THRESHOLD INCREASED TO 0.6 TO REDUCE DUPLICATES
+                for (const person of knownPeople) {
+                    const dist = faceapi.euclideanDistance(descriptor, person.descriptor);
+                    if (dist < 0.6) { matchedPerson = person; break; }
+                }
+
+                if (matchedPerson) {
+                    detectedPeopleIds.push(matchedPerson.id);
+                } else {
+                    const faceThumb = await getFaceThumbnail(img, det.detection.box);
+                    const newPersonRef = doc(collection(db, 'artifacts', appId, 'users', user.uid, 'known_people'));
+                    const personData = {
+                        name: "Unnamed Person",
+                        descriptor: descriptor,
+                        thumbnail: faceThumb,
+                        count: 1
+                    };
+                    await setDoc(newPersonRef, personData);
+                    detectedPeopleIds.push(newPersonRef.id);
+                    knownPeople.push({ id: newPersonRef.id, ...personData });
+                }
+            }
+
+            const photoDataUrl = await optimize(file);
+            await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'photos'), {
+                url: photoDataUrl,
+                peopleIds: detectedPeopleIds,
+                time: Date.now()
+            });
+        }
+
+        async function getFaceThumbnail(img, box) {
+            const canvas = document.getElementById('crop-canvas');
+            const ctx = canvas.getContext('2d');
+            const pad = 0.2;
+            const x = Math.max(0, box.x - box.width * pad);
+            const y = Math.max(0, box.y - box.height * pad);
+            const w = Math.min(img.width - x, box.width * (1 + pad * 2));
+            const h = Math.min(img.height - y, box.height * (1 + pad * 2));
+            
+            canvas.width = 150; canvas.height = 150;
+            ctx.drawImage(img, x, y, w, h, 0, 0, 150, 150);
+            return canvas.toDataURL('image/jpeg', 0.8);
+        }
+
         async function optimize(file) {
             return new Promise(res => {
                 const r = new FileReader();
@@ -154,105 +260,131 @@
                     img.onload = () => {
                         const can = document.createElement('canvas');
                         let w = img.width, h = img.height;
-                        const MAX = 1200; 
+                        const MAX = 1100;
                         if (w > h && w > MAX) { h *= MAX / w; w = MAX; }
                         else if (h > MAX) { w *= MAX / h; h = MAX; }
                         can.width = w; can.height = h;
                         can.getContext('2d').drawImage(img, 0, 0, w, h);
-                        res(can.toDataURL('image/jpeg', 0.7)); 
+                        res(can.toDataURL('image/jpeg', 0.7));
                     };
                 };
             });
         }
 
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            document.getElementById('toast-text').innerText = msg;
-            t.classList.remove('opacity-0', 'translate-y-10');
-            t.classList.add('opacity-100', 'translate-y-0');
-            setTimeout(() => {
-                t.classList.add('opacity-0', 'translate-y-10');
-                t.classList.remove('opacity-100', 'translate-y-0');
-            }, 3000);
-        }
-
-        function syncGallery() {
-            const ref = collection(db, 'artifacts', appId, 'users', user.uid, 'photos');
-            onSnapshot(ref, (snap) => {
-                loader.style.display = 'none';
-                photos = [];
-                snap.forEach(d => photos.push({ id: d.id, ...d.data() }));
-                render();
-            }, (err) => {
-                console.error("Sync error:", err);
-                status.innerText = "Error Syncing ❌";
-            });
-        }
-
-        function render() {
-            const groups = {};
-            photos.forEach(p => { if(p.tag) groups[p.tag] = p.url; });
-            
+        function renderPeople() {
+            if (knownPeople.length === 0) return;
             peopleScroller.innerHTML = '';
-            Object.keys(groups).forEach(name => {
+            
+            knownPeople.forEach(person => {
                 const div = document.createElement('div');
-                div.className = `flex-shrink-0 flex flex-col items-center gap-2 cursor-pointer face-blob ${filterTag === name ? 'opacity-100' : 'opacity-60'}`;
+                div.className = `flex-shrink-0 flex flex-col items-center gap-2 face-blob ${currentFilterPersonId === person.id ? 'face-active' : ''}`;
                 div.innerHTML = `
-                    <div class="w-20 h-20 rounded-full overflow-hidden border-4 ${filterTag === name ? 'border-indigo-600' : 'border-white'} shadow-lg">
-                        <img src="${groups[name]}" class="w-full h-full object-cover">
+                    <div class="relative">
+                        <div class="w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-lg">
+                            <img src="${person.thumbnail}" class="w-full h-full object-cover">
+                        </div>
+                        <button class="edit-name absolute -bottom-1 -right-1 bg-white w-7 h-7 rounded-full shadow-md flex items-center justify-center text-[10px] text-indigo-600 hover:bg-indigo-50">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                        <button class="delete-person absolute -top-1 -right-1 bg-red-500 w-7 h-7 rounded-full shadow-md flex items-center justify-center text-[10px] text-white hover:bg-red-600">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>
-                    <span class="text-xs font-bold text-slate-700">${name}</span>
+                    <span class="text-[10px] font-bold text-slate-700 capitalize max-w-[80px] truncate text-center">${person.name}</span>
                 `;
-                div.onclick = () => { filterTag = (filterTag === name) ? null : name; render(); };
+                
+                div.onclick = async (e) => {
+                    if (e.target.closest('.edit-name')) {
+                        activeFaceToNameId = person.id;
+                        document.getElementById('modal-face-img').src = person.thumbnail;
+                        personNameInput.value = person.name === "Unnamed Person" ? "" : person.name;
+                        tagModal.classList.remove('hidden');
+                        return;
+                    }
+                    if (e.target.closest('.delete-person')) {
+                        if(confirm(`Kya aap is album ko delete karna chahte hain?`)) {
+                            await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'known_people', person.id));
+                            if(currentFilterPersonId === person.id) currentFilterPersonId = null;
+                            showToast("Album Deleted");
+                        }
+                        return;
+                    }
+                    currentFilterPersonId = (currentFilterPersonId === person.id) ? null : person.id;
+                    clearFilterBtn.style.display = currentFilterPersonId ? 'block' : 'none';
+                    renderGallery();
+                    renderPeople();
+                };
                 peopleScroller.appendChild(div);
             });
+        }
 
+        function renderGallery() {
             galleryGrid.innerHTML = '';
-            const filtered = filterTag ? photos.filter(p => p.tag === filterTag) : photos;
-            
+            const filtered = currentFilterPersonId 
+                ? photos.filter(p => p.peopleIds && p.peopleIds.includes(currentFilterPersonId))
+                : photos;
+
+            if (filtered.length === 0) {
+                galleryGrid.innerHTML = `<div class="col-span-full py-10 text-center text-slate-400">Yahan koi photos nahi hain.</div>`;
+                return;
+            }
+
             filtered.forEach(p => {
-                const div = document.createElement('div');
-                div.className = 'photo-card relative aspect-[3/4] bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all group';
-                div.innerHTML = `<img src="${p.url}" class="w-full h-full object-cover" loading="lazy">
-                    <div class="actions opacity-0 translate-y-4 absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-4 transition-all duration-300">
-                        <div class="flex justify-between items-center">
-                            <button class="tag-trigger bg-white/20 text-white px-4 py-2 rounded-full text-xs font-bold hover:bg-white hover:text-slate-900 transition-all">
-                                <i class="fas fa-tag"></i> ${p.tag || 'Tag Karein'}
-                            </button>
-                            <button class="del-trigger w-9 h-9 bg-red-500/20 text-white rounded-full hover:bg-red-600 transition-all"><i class="fas fa-trash-alt"></i></button>
+                const card = document.createElement('div');
+                card.className = 'photo-card relative aspect-square md:aspect-[3/4] bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl border border-slate-100 transition-all';
+                card.innerHTML = `
+                    <img src="${p.url}" class="w-full h-full object-cover" loading="lazy">
+                    <div class="actions md:opacity-0 absolute inset-0 bg-gradient-to-t from-black/80 flex flex-col justify-end p-3 transition-all duration-300">
+                        <div class="flex justify-between items-center gap-2">
+                             <div class="flex -space-x-2 overflow-hidden">
+                                ${ (p.peopleIds || []).slice(0, 3).map(pid => {
+                                    const pers = knownPeople.find(k => k.id === pid);
+                                    return pers ? `<img class="inline-block h-6 w-6 rounded-full ring-2 ring-white" src="${pers.thumbnail}">` : '';
+                                }).join('') }
+                             </div>
+                             <button class="del-btn w-8 h-8 bg-red-500/20 text-white rounded-full flex items-center justify-center hover:bg-red-500 transition-all"><i class="fas fa-trash-alt text-[10px]"></i></button>
                         </div>
-                    </div>`;
-                div.querySelector('.tag-trigger').onclick = () => { selectedId = p.id; tagNameInput.value = p.tag || ''; tagModal.classList.remove('hidden'); };
-                div.querySelector('.del-trigger').onclick = async () => { 
-                    await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'photos', p.id));
-                    showToast("Photo Hatai Gayi");
+                    </div>
+                `;
+                card.querySelector('.del-btn').onclick = async () => {
+                    if (confirm("Photo delete kar dein?")) {
+                        await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'photos', p.id));
+                    }
                 };
-                galleryGrid.appendChild(div);
+                galleryGrid.appendChild(card);
             });
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.querySelector('span').innerText = msg;
+            t.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => t.classList.remove('opacity-100', 'translate-y-0'), 3000);
         }
 
         uploadInput.onchange = async (e) => {
             const files = Array.from(e.target.files);
-            if(!files.length) return;
-            showToast(`${files.length} Photos sync ho rahi hain...`);
-            for(let f of files) {
-                const url = await optimize(f);
-                await addDoc(collection(db, 'artifacts', appId, 'users', user.uid, 'photos'), {
-                    url, tag: null, time: Date.now()
-                });
+            if (!files.length) return;
+            showToast(`AI is scanning ${files.length} photos...`);
+            for (const file of files) {
+                await processPhoto(file);
             }
+            showToast("Sync Complete!");
             uploadInput.value = '';
         };
 
-        document.getElementById('save-tag').onclick = async () => {
-            const name = tagNameInput.value.trim();
-            if(name && selectedId) {
-                await updateDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'photos', selectedId), { tag: name });
+        document.getElementById('save-person-btn').onclick = async () => {
+            const name = personNameInput.value.trim();
+            if (name && activeFaceToNameId) {
+                const ref = doc(db, 'artifacts', appId, 'users', user.uid, 'known_people', activeFaceToNameId);
+                await updateDoc(ref, { name: name });
                 tagModal.classList.add('hidden');
-                showToast(`${name} ke album mein add ho gaya!`);
+                showToast(`Saved: ${name}`);
             }
         };
-        document.getElementById('close-modal').onclick = () => tagModal.classList.add('hidden');
+
+        document.getElementById('close-modal-btn').onclick = () => tagModal.classList.add('hidden');
+        clearFilterBtn.onclick = () => { currentFilterPersonId = null; clearFilterBtn.style.display = 'none'; renderGallery(); renderPeople(); };
     </script>
 </body>
 </html>
